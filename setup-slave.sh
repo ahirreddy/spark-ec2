@@ -14,19 +14,18 @@ HOSTNAME=$PRIVATE_DNS  # Fix the bash built-in hostname variable too
 
 echo "Setting up slave on `hostname`..."
 
-# Mount options to use for xfs
-XFS_MOUNT_OPTS="defaults,noatime,nodiratime,allocsize=8m"
+# Mount options to use for ext4
+EXT4_MOUNT_OPTS="defaults,noatime,nodiratime,allocsize=8m"
 
-# Reformat existing mount points as XFS
-yum install -y xfsprogs
+# Reformat existing mount points as EXT4
 for mnt in `mount | grep mnt | cut -d " " -f 3`; do
   device=$(df /$mnt | tail -n 1 | awk '{ print $1; }')
   empty=$(ls /$mnt | grep -v lost+found) 
   if [[ "$empty" == "" ]]; then
     umount /$mnt
-    mkfs.xfs -f $device
-    mount -o $XFS_MOUNT_OPTS $device /$mnt
-    echo "$device /$mnt auto $XFS_MOUNT_OPTS 0 0" >> /etc/fstab
+    mkfs.ext4 -f $device
+    mount -o $EXT4_MOUNT_OPTS $device /$mnt
+    echo "$device /$mnt auto $EXT4_MOUNT_OPTS 0 0" >> /etc/fstab
   fi
 done
 
@@ -35,11 +34,11 @@ if [[ -e /dev/sdv ]]; then
   # Check if /dev/sdv is already formatted
   if ! blkid /dev/sdv; then
     mkdir /vol
-    if mkfs.xfs -q /dev/sdv; then
-      mount -o $XFS_MOUNT_OPTS /dev/sdv /vol
+    if mkfs.ext4 -q /dev/sdv; then
+      mount -o $EXT4_MOUNT_OPTS /dev/sdv /vol
       chmod -R a+w /vol
     else
-      # mkfs.xfs is not installed on this machine or has failed;
+      # mkfs.ext4 is not installed on this machine or has failed;
       # delete /vol so that the user doesn't think we successfully
       # mounted the EBS volume
       rmdir /vol
@@ -48,7 +47,7 @@ if [[ -e /dev/sdv ]]; then
     # EBS volume is already formatted. Mount it if its not mounted yet.
     if ! grep -qs '/vol' /proc/mounts; then
       mkdir /vol
-      mount -o $XFS_MOUNT_OPTS /dev/sdv /vol
+      mount -o $EXT4_MOUNT_OPTS /dev/sdv /vol
       chmod -R a+w /vol
     fi
   fi
