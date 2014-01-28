@@ -15,7 +15,7 @@ HOSTNAME=$PRIVATE_DNS  # Fix the bash built-in hostname variable too
 echo "Setting up slave on `hostname`..."
 
 # Mount options to use for ext4
-EXT4_MOUNT_OPTS="defaults,noatime,nodiratime,allocsize=8m"
+EXT4_MOUNT_OPTS="defaults,noatime,nodiratime"
 
 # Reformat existing mount points as EXT4
 for mnt in `mount | grep mnt | cut -d " " -f 3`; do
