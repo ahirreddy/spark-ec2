@@ -17,17 +17,15 @@ echo "Setting up slave on `hostname`..."
 # Mount options to use for ext4
 EXT4_MOUNT_OPTS="defaults,noatime,nodiratime"
 
-# Reformat existing mount points as EXT4
-for mnt in `mount | grep mnt | cut -d " " -f 3`; do
-  device=$(df /$mnt | tail -n 1 | awk '{ print $1; }')
-  empty=$(ls /$mnt | grep -v lost+found) 
-  if [[ "$empty" == "" ]]; then
-    umount /$mnt
-    mkfs.ext4 $device
-    mount -o $EXT4_MOUNT_OPTS $device /$mnt
-    echo "$device /$mnt auto $EXT4_MOUNT_OPTS 0 0" >> /etc/fstab
-  fi
-done
+rm -rf /mnt*
+
+mkdir /mnt
+mkfs.ext4 -E lazy_itable_init=0,lazy_journal_init=0 /dev/sdb
+mount -o $EXT4_MOUNT_OPTS /dev/sdb /mnt
+
+mkdir /mnt2
+mkfs.ext4 -E lazy_itable_init=0,lazy_journal_init=0 /dev/sdc
+mount -o $EXT4_MOUNT_OPTS /dev/sdc /mnt2
 
 # Format and mount EBS volume (/dev/sdv) as /vol if the device exists
 if [[ -e /dev/sdv ]]; then
